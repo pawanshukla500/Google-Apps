@@ -13,27 +13,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex items-end gap-3">
             {/* Youthnic Logo Image */}
             <div className="flex flex-col justify-center h-full pt-1">
-                {/* 
-                   Replace 'logo.png' in your public folder to update this logo.
-                   Falls back to text if file is missing.
-                */}
                 <img 
-                  src="logo.png" 
-                  alt="Youthnic" 
+                  src="https://lh3.googleusercontent.com/d/1_reUhF3EECu-Ehjx--xp7Q3rQOLWBTmc" 
+                  alt="Logo" 
                   className="h-10 w-auto object-contain"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    const parent = e.currentTarget.parentElement;
-                    if (parent) {
-                      // Prevent duplicate text if onError fires multiple times
-                      if (!parent.querySelector('.fallback-text')) {
-                        const text = document.createElement('span');
-                        text.textContent = 'YOUTHNIC';
-                        text.className = 'fallback-text text-3xl font-black tracking-tighter text-black font-serif';
-                        parent.appendChild(text);
-                      }
-                    }
-                  }}
+                  referrerPolicy="no-referrer"
                 />
             </div>
             

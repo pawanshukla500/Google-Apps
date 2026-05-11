@@ -20,6 +20,7 @@ import { generateFashionImage, checkApiKey, openApiKeySelector, generatePoseIdea
 import { Key, Wand2, ArrowRight } from 'lucide-react';
 import JSZip from 'jszip';
 import FileSaver from 'file-saver';
+import { syncToDrive } from './services/driveService';
 
 const App: React.FC = () => {
   // State
@@ -34,6 +35,8 @@ const App: React.FC = () => {
   const [poses, setPoses] = useState<PoseDefinition[]>(DEFAULT_POSES);
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [sku, setSku] = useState("");
   const [editingImage, setEditingImage] = useState<GeneratedImage | null>(null);
 
   // Initial check for API Key
@@ -165,6 +168,26 @@ const App: React.FC = () => {
     }
   };
 
+  const handleDriveSync = async () => {
+    const successfulImages = generatedImages
+      .filter(img => img.status === 'success' && img.imageUrl)
+      .map(img => ({ base64: img.imageUrl!, poseId: img.poseId }));
+
+    if (successfulImages.length === 0) return;
+
+    setIsSyncing(true);
+    const result = await syncToDrive(sku, successfulImages);
+    setIsSyncing(false);
+
+    if (result.success) {
+      if (confirm(`Successfully uploaded images for SKU: ${sku || 'Unnamed'} to Google Drive. View Folder?`)) {
+        if (result.folderUrl) window.open(result.folderUrl, '_blank');
+      }
+    } else {
+      alert(`Sync failed: ${result.error}`);
+    }
+  };
+
   const updateEditedImage = (id: number, newUrl: string) => {
     setGeneratedImages(prev => prev.map(img => 
       img.id === id ? { ...img, imageUrl: newUrl, status: 'success' } : img
@@ -176,17 +199,18 @@ const App: React.FC = () => {
     if (successfulImages.length === 0) return;
 
     const zip = new JSZip();
-    const folder = zip.folder("youthnic-photoshoot");
+    const folderName = sku ? sku : "catalog-photoshoot";
+    const folder = zip.folder(folderName);
 
     successfulImages.forEach((img) => {
       if (img.imageUrl) {
         const base64Data = img.imageUrl.split(',')[1];
-        folder?.file(`pose-${img.poseId}.png`, base64Data, { base64: true });
+        folder?.file(`${folderName}-pose-${img.poseId}.png`, base64Data, { base64: true });
       }
     });
 
     const content = await zip.generateAsync({ type: "blob" });
-    FileSaver.saveAs(content, `youthnic-collection-${Date.now()}.zip`);
+    FileSaver.saveAs(content, `${folderName}-${Date.now()}.zip`);
   };
 
   if (!apiKeySet) {
@@ -203,7 +227,7 @@ const App: React.FC = () => {
             <div>
               <h2 className="text-2xl font-serif font-bold text-black mb-3">Studio Access Required</h2>
               <p className="text-gray-500 text-sm leading-relaxed mb-8">
-                Connect your Gemini API key to access the Youthnic high-fidelity generation engine.
+                Connect your Gemini API key to access the high-fidelity generation engine.
               </p>
             </div>
             <button
@@ -248,6 +272,18 @@ const App: React.FC = () => {
             </div>
           </div>
 
+          {/* SKU Selection */}
+          <div className="bg-white p-6 border border-gray-100 rounded-sm space-y-4">
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] block">Stock Keeping Unit (SKU)</label>
+            <input 
+              type="text" 
+              value={sku}
+              onChange={(e) => setSku(e.target.value)}
+              placeholder="Enter SKU e.g. YTH-2024-DR-01"
+              className="w-full bg-gray-50 border-none rounded-sm px-4 py-3 text-sm font-medium focus:ring-1 focus:ring-black transition-all"
+            />
+          </div>
+
           {/* Prompt Sections */}
           <PromptPanel 
             settings={globalSettings}
@@ -289,9 +325,12 @@ const App: React.FC = () => {
         <div className="lg:col-span-8 min-h-[800px] border-l border-gray-100 pl-12">
            <Gallery 
             images={generatedImages} 
+            sku={sku}
+            isSyncing={isSyncing}
             onEdit={setEditingImage} 
             onRegenerate={handleRegenerateSingle}
             onDownloadAll={handleDownloadAll}
+            onSyncToDrive={handleDriveSync}
            />
         </div>
       </div>

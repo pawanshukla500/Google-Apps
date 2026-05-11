@@ -1,5 +1,5 @@
 {
-  "name": "Youthnic AI Studio-First",
-  "description": "Professional AI fashion photoshoot system generating ultra-realistic model images from product references using Gemini 3 Pro and Flash models.",
+  "name": "AI Fashion Studio",
+  "description": "Professional AI fashion photoshoot system generating ultra-realistic model images from product references.",
   "requestFramePermissions": []
 }

@@ -7,9 +7,20 @@ interface GalleryProps {
   onEdit: (img: GeneratedImage) => void;
   onRegenerate: (img: GeneratedImage) => void;
   onDownloadAll?: () => void;
+  onSyncToDrive?: () => void;
+  isSyncing?: boolean;
+  sku?: string;
 }
 
-const Gallery: React.FC<GalleryProps> = ({ images, onEdit, onRegenerate, onDownloadAll }) => {
+const Gallery: React.FC<GalleryProps> = ({ 
+  images, 
+  onEdit, 
+  onRegenerate, 
+  onDownloadAll, 
+  onSyncToDrive,
+  isSyncing,
+  sku 
+}) => {
   const currentDate = new Date().toLocaleDateString('en-US');
 
   return (
@@ -20,12 +31,24 @@ const Gallery: React.FC<GalleryProps> = ({ images, onEdit, onRegenerate, onDownl
              <Layers size={14} />
              <span className="text-[10px] uppercase font-bold tracking-widest">Collection</span>
            </div>
-           <h2 className="text-3xl font-serif text-black">Generated Assets</h2>
+           <h2 className="text-3xl font-serif text-black">{sku || 'New Project'}</h2>
         </div>
         
         <div className="flex gap-3">
-          <button className="px-5 py-2.5 bg-white border border-gray-200 rounded-sm text-xs font-bold text-gray-600 uppercase tracking-wider hover:bg-gray-50 transition-colors">
-            Filter
+          <button 
+                onClick={onSyncToDrive}
+                disabled={isSyncing || images.filter(i => i.status === 'success').length === 0}
+                className="px-5 py-2.5 bg-white border border-gray-200 rounded-sm text-xs font-bold text-gray-600 uppercase tracking-wider hover:bg-gray-50 transition-colors flex items-center gap-2 disabled:opacity-50"
+          >
+            {isSyncing ? (
+                <>
+                  <RefreshCw className="animate-spin" size={14} /> Syncing...
+                </>
+            ) : (
+                <>
+                  <RefreshCw size={14} /> Sync to Drive
+                </>
+            )}
           </button>
           <button 
             onClick={onDownloadAll}

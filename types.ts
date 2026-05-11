@@ -46,3 +46,9 @@ export interface AiStudioWindow {
     openSelectKey: () => Promise<void>;
   };
 }
+
+declare global {
+  interface Window extends AiStudioWindow {}
+  const google: any;
+  const gapi: any;
+}
